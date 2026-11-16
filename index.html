@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bé Lái Xe Khám Phá - Học Biển Báo Giao Thông</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:#2563eb;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;user-select:none;
+}
+
+#game-container{
+  width:100vw;height:100vh;max-width:1040px;max-height:660px;
+  position:relative;overflow:hidden;background:#a8e4a0;
+  box-shadow:0 20px 45px rgba(0,0,0,0.4);border-radius:22px;border:4px solid #ffffff33;
+}
+
+/* ==================== SCREENS ==================== */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .3s;}
+.screen.hidden{display:none!important;}
+
+/* ==================== 1. START SCREEN (CHỌN XE & ĐIỂM ĐẾN) ==================== */
+#screen-start{
+  background:radial-gradient(circle at 50% 30%, #bbf7d0 0%, #7dd3fc 65%, #38bdf8 100%);
+  padding:16px 20px;justify-content:flex-start;overflow-y:auto;
+}
+.start-top{text-align:center;margin:6px 0 10px;}
+.title-badge{
+  display:inline-flex;align-items:center;gap:8px;background:#ffffffdd;
+  padding:4px 18px;border-radius:30px;font-size:.9rem;font-weight:900;
+  color:#15803d;box-shadow:0 4px 10px rgba(0,0,0,0.1);margin-bottom:4px;
+}
+.start-title{
+  font-size:1.9rem;color:#1e3a8a;font-weight:900;
+  text-shadow:2px 2px 0 #fff, 4px 4px 0 rgba(0,0,0,0.1);letter-spacing:.5px;
+}
+
+/* Chọn Xe */
+.section-title{
+  font-size:.98rem;font-weight:900;color:#0f172a;
+  display:flex;align-items:center;gap:6px;margin:6px 0 8px;width:100%;max-width:760px;
+}
+.car-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  width:100%;max-width:760px;margin-bottom:10px;
+}
+.car-btn{
+  background:#ffffff;border:3px solid #cbd5e1;border-radius:18px;
+  padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  box-shadow:0 5px 0 #94a3b8;transition:all .18s;
+}
+.car-btn:hover{transform:translateY(-2px);border-color:#38bdf8;}
+.car-btn.active{
+  border-color:#f59e0b;background:#fffbeb;
+  box-shadow:0 6px 0 #d97706, 0 0 15px rgba(245,158,11,0.4);
+  transform:translateY(-3px);
+}
+.car-preview{font-size:2.2rem;margin-bottom:3px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.15));}
+.car-name{font-size:.84rem;font-weight:900;color:#1e293b;}
+.car-desc{font-size:.7rem;color:#64748b;font-weight:700;}
+
+/* Chọn Điểm Đến */
+.dest-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  width:100%;max-width:760px;margin-bottom:14px;
+}
+.dest-card{
+  background:#ffffff;border-radius:18px;padding:12px 8px;cursor:pointer;
+  border:3px solid #cbd5e1;box-shadow:0 5px 0 #94a3b8;
+  display:flex;flex-direction:column;align-items:center;transition:all .18s;text-align:center;
+}
+.dest-card:hover{transform:translateY(-2px);border-color:#3b82f6;}
+.dest-card.active{
+  border-color:#10b981;background:#f0fdf4;
+  box-shadow:0 6px 0 #059669, 0 0 16px rgba(16,185,129,0.4);
+  transform:translateY(-3px);
+}
+.dest-icon{font-size:2.4rem;margin-bottom:4px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.15));}
+.dest-name{font-size:.92rem;font-weight:900;color:#1e3a8a;}
+.dest-desc{font-size:.72rem;color:#64748b;font-weight:700;margin-top:2px;}
+
+/* Nút bắt đầu to nổi bật */
+.btn-start-game{
+  background:linear-gradient(180deg,#22c55e,#15803d);color:#fff;
+  border:3px solid #166534;border-radius:999px;padding:12px 42px;
+  font-size:1.2rem;font-weight:900;cursor:pointer;
+  box-shadow:0 7px 0 #14532d, 0 10px 20px rgba(0,0,0,0.25);
+  transition:all .15s;letter-spacing:.5px;margin-top:2px;
+  display:inline-flex;align-items:center;gap:10px;
+}
+.btn-start-game:hover{transform:translateY(-2px);box-shadow:0 9px 0 #14532d;}
+.btn-start-game:active{transform:translateY(4px);box-shadow:0 2px 0 #14532d;}
+
+/* ==================== 2. SCREEN DRIVE 3D ==================== */
+#screen-drive{padding:0;background:#000;position:relative;}
+#drive-canvas{width:100%;height:100%;display:block;}
+
+.hud-banner{
+  position:absolute;top:10px;left:14px;right:14px;
+  background:rgba(255,255,255,0.94);border-radius:18px;
+  padding:8px 16px;display:flex;align-items:center;justify-content:space-between;
+  border:3px solid #93c5fd;box-shadow:0 6px 16px rgba(0,0,0,0.2);z-index:10;
+}
+.hud-dest{font-size:1rem;font-weight:900;color:#1e3a8a;display:flex;align-items:center;gap:8px;}
+.hud-car-badge{
+  background:#eff6ff;padding:4px 10px;border-radius:12px;
+  border:1px solid #bfdbfe;font-size:.85rem;color:#1d4ed8;font-weight:800;
+}
+.hud-status{
+  font-size:.9rem;font-weight:800;color:#15803d;background:#dcfce7;
+  padding:4px 14px;border-radius:20px;border:1px solid #86efac;
+}
+.hud-score{font-size:1.1rem;font-weight:900;color:#d97706;}
+
+.drive-toast{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  background:rgba(15,23,42,0.85);color:#fff;padding:8px 24px;border-radius:30px;
+  font-size:.92rem;font-weight:800;z-index:10;pointer-events:none;
+  border:2px solid rgba(255,255,255,0.3);box-shadow:0 6px 15px rgba(0,0,0,0.3);
+}
+
+/* ==================== 3. CÂU HỎI BIỂN BÁO DIALOG ==================== */
+.overlay-modal{
+  position:absolute;inset:0;background:rgba(15,23,42,0.76);
+  display:flex;align-items:center;justify-content:center;
+  z-index:50;padding:16px;animation:fadeIn .22s ease-out;
+}
+.overlay-modal.hidden{display:none!important;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.q-box{
+  background:#ffffff;border-radius:24px;padding:18px 22px;max-width:580px;width:100%;
+  border:5px solid #f59e0b;box-shadow:0 20px 40px rgba(0,0,0,0.35);text-align:center;
+  animation:popIn .28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+@keyframes popIn{from{transform:scale(0.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+.q-badge{
+  display:inline-block;background:#f59e0b;color:#fff;
+  font-size:.85rem;font-weight:900;padding:3px 14px;border-radius:20px;margin-bottom:6px;
+}
+.q-sign-show{
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  background:#f8fafc;border:2px dashed #93c5fd;border-radius:18px;
+  padding:10px 14px;margin:6px 0 12px;
+}
+.q-sign-img{width:86px;height:86px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.q-sign-img img{width:100%;height:100%;object-fit:contain;border-radius:10px;box-shadow:0 3px 8px rgba(0,0,0,0.12);}
+.q-sign-details{text-align:left;}
+.q-sign-title{font-size:1.1rem;font-weight:900;color:#1e3a8a;margin-bottom:2px;}
+.q-sign-hint{font-size:.82rem;color:#475569;line-height:1.35;font-weight:600;}
+
+.q-question-text{font-size:1.02rem;font-weight:900;color:#0f172a;margin-bottom:10px;}
+.q-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.q-opt-btn{
+  background:#f8fafc;border:3px solid #cbd5e1;border-radius:14px;
+  padding:10px 8px;font-size:.88rem;font-weight:800;color:#1e293b;
+  cursor:pointer;transition:all .15s;text-align:center;
+}
+.q-opt-btn:hover:not(:disabled){background:#e0f2fe;border-color:#38bdf8;transform:scale(1.02);}
+.q-opt-btn.correct{background:#dcfce7!important;border-color:#22c55e!important;color:#15803d!important;}
+.q-opt-btn.wrong{background:#fee2e2!important;border-color:#ef4444!important;color:#b91c1c!important;animation:shake .3s;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+.q-explain{
+  font-size:.86rem;font-weight:800;padding:8px 12px;border-radius:12px;
+  margin-bottom:10px;display:none;line-height:1.35;
+}
+.q-explain.ok{display:block;background:#dcfce7;color:#166534;border:1px solid #86efac;}
+.q-explain.ko{display:block;background:#fffbeb;color:#9a3412;border:1px solid #fde68a;}
+
+.btn-continue{
+  background:linear-gradient(180deg,#22c55e,#15803d);color:#fff;
+  border:3px solid #166534;border-radius:999px;padding:10px 30px;
+  font-size:1.02rem;font-weight:900;cursor:pointer;box-shadow:0 5px 0 #14532d;
+  display:none;transition:all .15s;
+}
+.btn-continue:hover{transform:translateY(-2px);box-shadow:0 7px 0 #14532d;}
+.btn-continue:active{transform:translateY(3px);box-shadow:0 1px 0 #14532d;}
+.btn-continue.show{display:inline-block;}
+
+/* ==================== 4. BẢN ĐỒ CHỌN ĐƯỜNG NGẮN NHẤT ==================== */
+.map-box{
+  background:#ffffff;border-radius:24px;padding:14px 18px;max-width:760px;width:100%;
+  border:5px solid #3b82f6;box-shadow:0 20px 40px rgba(0,0,0,0.35);text-align:center;
+  animation:popIn .28s ease-out;display:flex;flex-direction:column;gap:8px;
+}
+.map-header h3{font-size:1.2rem;font-weight:900;color:#1d4ed8;}
+.map-header p{font-size:.85rem;color:#475569;font-weight:700;}
+
+#junction-canvas{
+  width:100%;height:250px;background:#9fe07a;border-radius:16px;
+  border:3px solid #65a30d;display:block;
+}
+
+.map-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.choice-btn{
+  background:#fff;border:3px solid #cbd5e1;border-radius:15px;padding:9px 6px;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  transition:all .18s;font-weight:900;
+}
+.choice-btn:hover:not(:disabled){transform:translateY(-2px);border-color:#3b82f6;box-shadow:0 5px 0 #3b82f6;}
+.choice-btn .c-title{font-size:.88rem;color:#1e3a8a;}
+.choice-btn .c-math{font-size:.78rem;color:#64748b;margin:2px 0;}
+.choice-btn .c-dist{font-size:1rem;color:#d97706;}
+.choice-btn.correct{background:#dcfce7!important;border-color:#22c55e!important;box-shadow:0 5px 0 #16a34a!important;}
+.choice-btn.wrong{background:#fee2e2!important;border-color:#ef4444!important;}
+
+.map-feedback{
+  font-size:.88rem;font-weight:800;padding:6px 12px;border-radius:10px;
+  min-height:28px;line-height:1.3;
+}
+.map-feedback.ok{background:#dcfce7;color:#15803d;border:1px solid #86efac;}
+.map-feedback.ko{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+
+/* ==================== 5. MÀN HÌNH ĐẾN ĐÍCH SIÊU ĐẸP ==================== */
+#screen-result{
+  background:radial-gradient(circle at 50% 30%, #fef08a 0%, #fed7aa 40%, #7dd3fc 85%, #38bdf8 100%);
+  padding:20px;text-align:center;position:relative;overflow:hidden;
+}
+#confetti-canvas{position:absolute;inset:0;pointer-events:none;z-index:1;}
+
+.result-card{
+  background:rgba(255,255,255,0.96);border-radius:28px;padding:22px 28px;
+  max-width:620px;width:100%;border:6px solid #fbbf24;
+  box-shadow:0 20px 45px rgba(0,0,0,0.25);position:relative;z-index:2;
+  animation:popIn .4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+.trophy-badge{
+  font-size:3.5rem;display:inline-block;animation:floatTrophy 1.5s infinite alternate ease-in-out;
+  filter:drop-shadow(0 6px 12px rgba(245,158,11,0.4));margin-bottom:-6px;
+}
+@keyframes floatTrophy{from{transform:translateY(0) scale(1);}to{transform:translateY(-8px) scale(1.08);}}
+
+.result-card h2{
+  font-size:1.85rem;color:#b45309;font-weight:900;
+  text-shadow:2px 2px 0 #fff;margin-bottom:2px;
+}
+.result-dest{font-size:1rem;color:#334155;font-weight:800;margin-bottom:8px;}
+
+.result-stars-box{
+  display:inline-flex;gap:10px;background:#fef3c7;padding:6px 20px;
+  border-radius:30px;border:2px solid #fde68a;margin-bottom:12px;
+}
+.star-icon{font-size:2.4rem;transition:all .3s;}
+
+.result-stats-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;
+}
+.res-stat{
+  background:#f8fafc;border-radius:16px;padding:10px 8px;border:2px solid #e2e8f0;
+}
+.res-stat .val{font-size:1.35rem;font-weight:900;color:#1d4ed8;}
+.res-stat .lbl{font-size:.75rem;color:#64748b;font-weight:800;margin-top:2px;}
+
+.result-diploma{
+  background:#f0fdf4;border:2px solid #86efac;border-radius:16px;
+  padding:10px 14px;font-size:.86rem;color:#166534;font-weight:800;text-align:left;
+  margin-bottom:16px;line-height:1.45;
+}
+
+.btn-replay{
+  background:linear-gradient(180deg,#3b82f6,#1d4ed8);color:#fff;
+  border:3px solid #1e40af;border-radius:999px;padding:12px 38px;
+  font-size:1.1rem;font-weight:900;cursor:pointer;box-shadow:0 6px 0 #172554;
+  transition:all .15s;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-replay:hover{transform:translateY(-2px);box-shadow:0 8px 0 #172554;}
+.btn-replay:active{transform:translateY(4px);box-shadow:0 2px 0 #172554;}
+
+/* Responsive */
+@media(max-width:680px){
+  .start-title{font-size:1.4rem;}
+  .car-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .dest-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .q-options{grid-template-columns:1fr;}
+  .map-choices{grid-template-columns:1fr;}
+  #junction-canvas{height:180px;}
+}
+</style>
+</head>
+<body>
+
+<div id="game-container">
+
+  <!-- ==================== 1. MÀN HÌNH BẮT ĐẦU: CHỌN XE & ĐIỂM ĐẾN ==================== -->
+  <div id="screen-start" class="screen">
+    <div class="start-top">
+      <div class="title-badge">🚦 HỌC AN TOÀN GIAO THÔNG TIỂU HỌC 🎒</div>
+      <h1 class="start-title">BÉ LÁI XE KHÁM PHÁ</h1>
+    </div>
+
+    <!-- Bước 1: Chọn Xe -->
+    <div class="section-title"><span>🚗</span> Bước 1: Chọn chiếc xe em yêu thích!</div>
+    <div class="car-grid">
+      <div class="car-btn active" data-car="red_family">
+        <div class="car-preview">🚗</div>
+        <div class="car-name">Xe Đỏ Gia Đình</div>
+        <div class="car-desc">Êm ái &amp; ấm áp</div>
+      </div>
+      <div class="car-btn" data-car="yellow_taxi">
+        <div class="car-preview">🚕</div>
+        <div class="car-name">Taxi Vàng</div>
+        <div class="car-desc">Thông thái, nhanh nhẹn</div>
+      </div>
+      <div class="car-btn" data-car="police_car">
+        <div class="car-preview">🚓</div>
+        <div class="car-name">Cảnh Sát Tí Hon</div>
+        <div class="car-desc">Gương mẫu chấp hành</div>
+      </div>
+      <div class="car-btn" data-car="school_bus">
+        <div class="car-preview">🚐</div>
+        <div class="car-name">Xe Buýt Học Sinh</div>
+        <div class="car-desc">Vui nhộn cùng bạn bè</div>
+      </div>
+    </div>
+
+    <!-- Bước 2: Chọn Điểm Đến -->
+    <div class="section-title"><span>📍</span> Bước 2: Chọn điểm đến của chuyến đi!</div>
+    <div class="dest-grid">
+      <div class="dest-card active" data-dest="library">
+        <div class="dest-icon">📚</div>
+        <div class="dest-name">Thư Viện</div>
+        <div class="dest-desc">Đọc sách bổ ích</div>
+      </div>
+      <div class="dest-card" data-dest="hospital">
+        <div class="dest-icon">🏥</div>
+        <div class="dest-name">Bệnh Viện</div>
+        <div class="dest-desc">Thăm người thân</div>
+      </div>
+      <div class="dest-card" data-dest="school">
+        <div class="dest-icon">🏫</div>
+        <div class="dest-name">Trường Tiểu Học</div>
+        <div class="dest-desc">Ngày hội rộn ràng</div>
+      </div>
+      <div class="dest-card" data-dest="park">
+        <div class="dest-icon">🎡</div>
+        <div class="dest-name">Công Viên</div>
+        <div class="dest-desc">Vui chơi thỏa thích</div>
+      </div>
+    </div>
+
+    <button class="btn-start-game" id="btn-start-game">
+      <span>LÊN XE XUẤT PHÁT NGAY!</span> <span>🚀</span>
+    </button>
+  </div>
+
+  <!-- ==================== 2. MÀN HÌNH LÁI XE 3D (GÓC NHÌN THỨ 3) ==================== -->
+  <div id="screen-drive" class="screen hidden">
+    <canvas id="drive-canvas"></canvas>
+
+    <div class="hud-banner">
+      <div class="hud-dest">
+        <span id="hud-car-badge" class="hud-car-badge">🚗 Xe Đỏ</span>
+        <span id="hud-dest-name">📍 Đích: Thư Viện</span>
+      </div>
+      <div class="hud-status" id="hud-status">🚗 Đang di chuyển êm ái...</div>
+      <div class="hud-score">⭐ <span id="hud-score-val">0</span> đ</div>
+    </div>
+
+    <div class="drive-toast" id="drive-toast">🚗 Xe đang chạy, hãy chú ý quan sát biển báo bên lề đường nhé!</div>
+  </div>
+
+  <!-- ==================== 3. CÂU HỎI BIỂN BÁO DIALOG ==================== -->
+  <div id="overlay-question" class="overlay-modal hidden">
+    <div class="q-box">
+      <div class="q-badge" id="q-badge">BIỂN BÁO 1/4</div>
+      <div class="q-sign-show">
+        <div class="q-sign-img" id="q-sign-img"></div>
+        <div class="q-sign-details">
+          <div class="q-sign-title" id="q-sign-title">Tên biển báo</div>
+          <div class="q-sign-hint" id="q-sign-hint">Gợi ý quan sát...</div>
+        </div>
+      </div>
+
+      <div class="q-question-text" id="q-question-text">Câu hỏi...</div>
+      <div class="q-options" id="q-options"></div>
+      <div class="q-explain" id="q-explain"></div>
+
+      <button class="btn-continue" id="btn-q-continue">Nổ máy chạy tiếp ➔</button>
+    </div>
+  </div>
+
+  <!-- ==================== 4. BẢN ĐỒ NGÃ RẼ: CHỌN ĐƯỜNG NGẮN NHẤT ==================== -->
+  <div id="overlay-map" class="overlay-modal hidden">
+    <div class="map-box">
+      <div class="map-header">
+        <h3>🗺️ NGÃ RẼ: CHỌN CON ĐƯỜNG NGẮN NHẤT!</h3>
+        <p>Bé hãy tính khoảng cách của 3 con đường và chọn con đường ngắn nhất để bạn An đi nhé:</p>
+      </div>
+
+      <canvas id="junction-canvas"></canvas>
+
+      <div class="map-choices" id="map-choices"></div>
+      <div class="map-feedback" id="map-feedback"></div>
+
+      <button class="btn-continue" id="btn-map-continue" style="margin:4px auto 0;">Tiến vào con đường đã chọn ➔</button>
+    </div>
+  </div>
+
+  <!-- ==================== 5. MÀN HÌNH ĐẾN ĐÍCH SIÊU ĐẸP ==================== -->
+  <div id="screen-result" class="screen hidden">
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="result-card">
+      <div class="trophy-badge">🏆</div>
+      <h2>HOAN HÔ BÉ ĐÃ VỀ ĐÍCH!</h2>
+      <div class="result-dest" id="res-dest-text">Bạn An đã cập bến an toàn!</div>
+
+      <div class="result-stars-box">
+        <span class="star-icon">⭐</span>
+        <span class="star-icon">⭐</span>
+        <span class="star-icon">⭐</span>
+      </div>
+
+      <div class="result-stats-grid">
+        <div class="res-stat">
+          <div class="val" id="res-score">100</div>
+          <div class="lbl">Điểm thưởng</div>
+        </div>
+        <div class="res-stat">
+          <div class="val" id="res-correct">4/4</div>
+          <div class="lbl">Biển báo đúng</div>
+        </div>
+        <div class="res-stat">
+          <div class="val" id="res-dist">32 m</div>
+          <div class="lbl">Quãng đường</div>
+        </div>
+      </div>
+
+      <div class="result-diploma" id="res-diploma">
+        🎖️ <b>BẰNG KHEN BÁC TÀI NHÍ XUẤT SẮC:</b><br>
+        Bé đã nhận biết chính xác các biển báo và tìm được con đường ngắn nhất!
+      </div>
+
+      <button class="btn-replay" onclick="game.goStart()">
+        <span>🔄 Lái Xe Chuyến Đi Mới!</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================================================================
+   1. ÂM THANH WEB AUDIO ĐÁNG YÊU (KHÔNG CẦN TỆP NGOÀI)
+   ================================================================ */
+const audio = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) this.ctx = new AC();
+    }
+  },
+  beep(freq = 440, type = 'sine', duration = 0.12, gainVal = 0.08) {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch(e) {}
+  },
+  playHonk() {
+    this.beep(330, 'triangle', 0.15, 0.12);
+    setTimeout(() => this.beep(392, 'triangle', 0.22, 0.12), 160);
+  },
+  playCorrect() {
+    this.beep(523.25, 'sine', 0.1, 0.1);
+    setTimeout(() => this.beep(659.25, 'sine', 0.1, 0.1), 100);
+    setTimeout(() => this.beep(783.99, 'sine', 0.25, 0.12), 200);
+  },
+  playCheer() {
+    [523, 659, 784, 1046].forEach((f, i) => {
+      setTimeout(() => this.beep(f, 'triangle', 0.25, 0.1), i * 110);
+    });
+  }
+};
+
+/* ================================================================
+   2. DỮ LIỆU BIỂN BÁO & CÂU HỎI (HÌNH DÁNG + CÔNG DỤNG)
+   ================================================================ */
+const SIGNS_DATA = {
+  traffic_light: {
+    id: 'traffic_light',
+    name: 'Đèn Tín Hiệu Giao Thông',
+    hint: 'Nhìn vào chiếc hộp đèn dài và 3 vòng tròn màu: Đỏ - Vàng - Xanh.',
+    svg: `<svg viewBox="0 0 70 95" width="100%" height="100%">
+      <rect x="15" y="6" width="40" height="80" rx="8" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <circle cx="35" cy="24" r="10" fill="#ef4444"/>
+      <circle cx="35" cy="46" r="10" fill="#f59e0b"/>
+      <circle cx="35" cy="68" r="10" fill="#22c55e"/>
+      <circle cx="35" cy="24" r="6" fill="#ff8080" opacity="0.6"/>
+      <rect x="31" y="86" width="8" height="9" fill="#94a3b8"/>
+    </svg>`,
+    qShape: {
+      q: 'Đèn tín hiệu giao thông có dạng hình học gì?',
+      opts: ['Hình hộp chữ nhật dài', 'Hình tròn', 'Hình tam giác', 'Hình thoi'],
+      ans: 0,
+      explain: 'Đúng rồi! Cột đèn có dạng hình hộp chữ nhật dài, xếp 3 đèn tròn Đỏ, Vàng, Xanh bên trong.'
+    },
+    qMeaning: {
+      q: 'Đèn tín hiệu giao thông có công dụng gì?',
+      opts: [
+        'Điều khiển xe cộ đi lại trật tự và an toàn',
+        'Chiếu sáng ban đêm thay đèn đường',
+        'Để chụp ảnh kỷ niệm',
+        'Báo hiệu trời sắp mưa'
+      ],
+      ans: 0,
+      explain: 'Chính xác! Đèn tín hiệu giúp xe cộ dừng và đi theo lượt: Đỏ dừng, Vàng chuẩn bị, Xanh được đi.'
+    }
+  },
+
+  pedestrian: {
+    id: 'pedestrian',
+    name: 'Đường Người Đi Bộ Cắt Ngang',
+    hint: 'Biển báo màu xanh dương viền trắng, có hình người đang bước đi.',
+    svg: `<svg viewBox="0 0 70 80" width="100%" height="100%">
+      <rect x="7" y="5" width="56" height="56" rx="8" fill="#1d4ed8" stroke="#1e40af" stroke-width="2"/>
+      <circle cx="35" cy="18" r="6" fill="#fff"/>
+      <line x1="35" y1="24" x2="35" y2="40" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="35" y1="31" x2="24" y2="27" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="35" y1="31" x2="46" y2="27" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="35" y1="40" x2="26" y2="52" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="35" y1="40" x2="44" y2="52" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <rect x="7" y="61" width="56" height="11" rx="3" fill="#cbd5e1"/>
+      <rect x="7" y="61" width="10" height="11" rx="2" fill="#fff"/>
+      <rect x="22" y="61" width="10" height="11" rx="2" fill="#fff"/>
+      <rect x="37" y="61" width="10" height="11" rx="2" fill="#fff"/>
+      <rect x="52" y="61" width="11" height="11" rx="2" fill="#fff"/>
+    </svg>`,
+    qShape: {
+      q: 'Biển báo người đi bộ qua đường có hình dạng và màu sắc gì?',
+      opts: ['Hình vuông / chữ nhật màu xanh dương', 'Hình tròn viền đỏ', 'Hình tam giác màu vàng', 'Hình chữ nhật màu đen'],
+      ans: 0,
+      explain: 'Đúng rồi! Đây là biển chỉ dẫn hình vuông hoặc chữ nhật màu xanh dương nổi bật.'
+    },
+    qMeaning: {
+      q: 'Khi nhìn thấy biển báo này, người lái xe phải làm gì?',
+      opts: [
+        'Giảm tốc độ và nhường đường cho người đi bộ',
+        'Tăng ga chạy thật nhanh qua',
+        'Bấm còi to để người đi bộ tránh ra',
+        'Dừng xe lại khóa cửa'
+      ],
+      ans: 0,
+      explain: 'Rất giỏi! Lái xe phải giảm tốc độ, chú ý quan sát và nhường đường cho người đi bộ qua đường an toàn.'
+    }
+  },
+
+  no_entry: {
+    id: 'no_entry',
+    name: 'Cấm Đi Ngược Chiều',
+    hint: 'Biển báo tròn màu đỏ rực, ở giữa có một vạch trắng to nằm ngang.',
+    svg: `<svg viewBox="0 0 80 80" width="100%" height="100%">
+      <circle cx="40" cy="36" r="34" fill="#dc2626" stroke="#b91c1c" stroke-width="3"/>
+      <rect x="14" y="29" width="52" height="14" rx="7" fill="#ffffff"/>
+      <rect x="34" y="68" width="12" height="10" fill="#94a3b8"/>
+      <rect x="26" y="76" width="28" height="4" rx="2" fill="#64748b"/>
+    </svg>`,
+    qShape: {
+      q: 'Biển "Cấm đi ngược chiều" có dạng hình gì?',
+      opts: ['Hình tròn nền đỏ có vạch trắng ngang', 'Hình tam giác vàng', 'Hình thoi màu xanh', 'Hình lục giác viền vàng'],
+      ans: 0,
+      explain: 'Chính xác! Biển cấm có hình tròn nền đỏ, vạch ngang màu trắng ở giữa.'
+    },
+    qMeaning: {
+      q: 'Biển báo này có ý nghĩa gì đối với xe cộ?',
+      opts: [
+        'Cấm tất cả các loại xe đi vào theo chiều này',
+        'Cho phép tất cả các xe đi tốc độ cao',
+        'Báo sắp có bãi đỗ xe ô tô',
+        'Báo phía trước có quán ăn ngon'
+      ],
+      ans: 0,
+      explain: 'Đúng rồi! Biển này nghiêm cấm xe đi vào theo hướng đặt biển để tránh tai nạn đối đầu!'
+    }
+  },
+
+  construction: {
+    id: 'construction',
+    name: 'Biển Báo Công Trường',
+    hint: 'Biển tam giác màu vàng viền đỏ, có hình người đang cầm xẻng đào đất.',
+    svg: `<svg viewBox="0 0 80 80" width="100%" height="100%">
+      <polygon points="40,5 76,68 4,68" fill="#f59e0b" stroke="#d97706" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="40" cy="27" r="6" fill="#1e293b"/>
+      <line x1="40" y1="33" x2="40" y2="49" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+      <line x1="40" y1="39" x2="30" y2="35" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>
+      <line x1="40" y1="39" x2="50" y2="36" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28,52 Q35,46 40,52 Q45,58 52,52" stroke="#1e293b" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <rect x="34" y="69" width="12" height="9" fill="#94a3b8"/>
+      <rect x="26" y="76" width="28" height="4" rx="2" fill="#64748b"/>
+    </svg>`,
+    qShape: {
+      q: 'Biển báo công trường thi công có dạng hình gì?',
+      opts: ['Hình tam giác màu vàng viền đỏ', 'Hình chữ nhật màu xanh', 'Hình tròn màu đỏ', 'Hình bình hành'],
+      ans: 0,
+      explain: 'Đúng rồi! Biển cảnh báo nguy hiểm thường có hình tam giác viền đỏ, nền vàng.'
+    },
+    qMeaning: {
+      q: 'Khi gặp biển báo công trường, người lái xe cần làm gì?',
+      opts: [
+        'Đi chậm lại, chú ý quan sát công nhân và chướng ngại vật',
+        'Tăng tốc thật nhanh để vượt qua khói bụi',
+        'Quay xe lại không bao giờ đi tiếp',
+        'Bấm còi liên tục'
+      ],
+      ans: 0,
+      explain: 'Chính xác! Phía trước đang thi công nên phải đi chậm và cẩn thận để bảo đảm an toàn!'
+    }
+  },
+
+  children: {
+    id: 'children',
+    name: 'Biển Báo Trẻ Em',
+    hint: 'Biển tam giác màu vàng viền đỏ, có hình hai bạn nhỏ nắm tay nhau đi học.',
+    svg: `<svg viewBox="0 0 80 80" width="100%" height="100%">
+      <polygon points="40,5 76,68 4,68" fill="#f59e0b" stroke="#d97706" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="33" cy="27" r="5.5" fill="#1e293b"/>
+      <line x1="33" y1="32" x2="33" y2="48" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="33" y1="38" x2="25" y2="34" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="33" y1="38" x2="41" y2="37" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="33" y1="48" x2="27" y2="58" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>
+      <line x1="33" y1="48" x2="39" y2="58" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="47" cy="31" r="4.5" fill="#1e293b"/>
+      <line x1="47" y1="35" x2="47" y2="49" stroke="#1e293b" stroke-width="3" stroke-linecap="round"/>
+      <line x1="47" y1="40" x2="41" y2="37" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="47" y1="40" x2="54" y2="39" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="47" y1="49" x2="42" y2="58" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="47" y1="49" x2="52" y2="58" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="34" y="69" width="12" height="9" fill="#94a3b8"/>
+      <rect x="26" y="76" width="28" height="4" rx="2" fill="#64748b"/>
+    </svg>`,
+    qShape: {
+      q: 'Biển báo "Trẻ em" có hình dạng và màu sắc như thế nào?',
+      opts: ['Hình tam giác màu vàng viền đỏ có vẽ 2 bạn nhỏ', 'Hình tròn màu xanh lá cây', 'Hình chữ nhật màu cam', 'Hình thoi màu trắng'],
+      ans: 0,
+      explain: 'Rất đúng! Biển có hình tam giác viền đỏ, nền vàng với hình 2 bạn nhỏ dễ thương.'
+    },
+    qMeaning: {
+      q: 'Biển báo này cảnh báo điều gì cho người tham gia giao thông?',
+      opts: [
+        'Gần trường học, khu vui chơi có trẻ em hay đi qua đường',
+        'Khu vực bán đồ chơi cho trẻ em',
+        'Nơi chỉ cho phép trẻ em được lái xe',
+        'Trường học đang đóng cửa nghỉ hè'
+      ],
+      ans: 0,
+      explain: 'Chính xác! Gần trường học có nhiều trẻ em nên lái xe phải đi thật chậm và cẩn thận!'
+    }
+  }
+};
+
+/* ================================================================
+   3. DỮ LIỆU ĐIỂM ĐẾN & XE ĐIỀU KHIỂN
+   ================================================================ */
+const CAR_STYLES = {
+  red_family:  { name: 'Xe Đỏ Gia Đình', color: '#ef4444', icon: '🚗', badge: '🚗 Xe Đỏ' },
+  yellow_taxi: { name: 'Taxi Vàng',      color: '#eab308', icon: '🚕', badge: '🚕 Taxi Vàng' },
+  police_car:  { name: 'Cảnh Sát Tí Hon',color: '#1d4ed8', icon: '🚓', badge: '🚓 Cảnh Sát' },
+  school_bus:  { name: 'Xe Buýt Học Sinh',color: '#f97316', icon: '🚐', badge: '🚐 Xe Buýt' }
+};
+
+const DESTINATIONS = {
+  library: {
+    id: 'library', name: 'Thư Viện', icon: '📚', buildingName: 'THƯ VIỆN',
+    shopName: 'Tiệm kem 🍦',
+    signs: ['traffic_light', 'pedestrian', 'no_entry', 'construction'],
+    routes: [
+      { id: 'A', name: 'Đường trên (qua Tiệm kem)', segs: [12, 28], total: 40, color: '#2563eb' },
+      { id: 'B', name: 'Đường giữa (thẳng tới cổng)', segs: [32], total: 32, color: '#d97706' },
+      { id: 'C', name: 'Đường dưới (qua Cầu & Sông)', segs: [18, 22], total: 40, color: '#7c3aed' }
+    ],
+    shortestId: 'B' // 32m
+  },
+  hospital: {
+    id: 'hospital', name: 'Bệnh Viện', icon: '🏥', buildingName: 'BỆNH VIỆN',
+    shopName: 'Hiệu thuốc 💊',
+    signs: ['traffic_light', 'pedestrian', 'no_entry', 'construction'],
+    routes: [
+      { id: 'A', name: 'Đường trên (qua Hiệu thuốc)', segs: [15, 25], total: 40, color: '#2563eb' },
+      { id: 'B', name: 'Đường giữa (thẳng tới cổng)', segs: [35], total: 35, color: '#d97706' },
+      { id: 'C', name: 'Đường dưới (qua Cầu & Sông)', segs: [20, 30], total: 50, color: '#7c3aed' }
+    ],
+    shortestId: 'B' // 35m
+  },
+  school: {
+    id: 'school', name: 'Trường Tiểu Học', icon: '🏫', buildingName: 'TRƯỜNG TIỂU HỌC',
+    shopName: 'Tiệm bánh 🥐',
+    signs: ['traffic_light', 'pedestrian', 'no_entry', 'children'],
+    routes: [
+      { id: 'A', name: 'Đường trên', segs: [30, 25], total: 55, color: '#2563eb' },
+      { id: 'B', name: 'Đường giữa (qua Tiệm bánh)', segs: [40], total: 40, color: '#d97706' },
+      { id: 'C', name: 'Đường dưới (qua Cầu & Sông)', segs: [15, 35], total: 50, color: '#7c3aed' }
+    ],
+    shortestId: 'B' // 40m
+  },
+  park: {
+    id: 'park', name: 'Công Viên', icon: '🎡', buildingName: 'CÔNG VIÊN THIẾU NHI',
+    shopName: 'Cửa hàng đồ chơi 🛍️',
+    signs: ['traffic_light', 'pedestrian', 'no_entry', 'children'],
+    routes: [
+      { id: 'A', name: 'Đường trên (lượn quanh)', segs: [10, 20], total: 30, color: '#2563eb' },
+      { id: 'B', name: 'Đường giữa (qua Cửa hàng)', segs: [20, 20], total: 40, color: '#d97706' },
+      { id: 'C', name: 'Đường dưới (qua Cầu)', segs: [10, 30], total: 40, color: '#7c3aed' }
+    ],
+    shortestId: 'A' // 30m
+  }
+};
+
+/* ================================================================
+   4. GAME CONTROLLER
+   ================================================================ */
+const game = {
+  selectedCarId: 'red_family',
+  selectedDestId: 'library',
+
+  currentDest: null,
+  currentCar: null,
+  score: 0,
+  signIndex: 0,
+  correctSigns: 0,
+  chosenRoute: null,
+  isJunctionPassed: false,
+
+  // Thông số tốc độ xe chạy êm ái
+  carSpeed: 0,
+  targetSpeed: 1.45,  // Tốc độ vừa phải, êm dịu, không giật
+  roadDistance: 0,
+  isDriving: false,
+  signZ: 1000,
+  approachingSign: null,
+  animId: null,
+
+  // Pháo hoa ăn mừng
+  confettiParticles: [],
+  confettiAnimId: null,
+
+  init() {
+    this.bindEvents();
+  },
+
+  bindEvents() {
+    // Chọn xe
+    document.querySelectorAll('.car-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        audio.beep(400, 'sine', 0.08);
+        document.querySelectorAll('.car-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.selectedCarId = btn.getAttribute('data-car');
+      });
+    });
+
+    // Chọn điểm đến
+    document.querySelectorAll('.dest-card').forEach(card => {
+      card.addEventListener('click', () => {
+        audio.beep(480, 'sine', 0.08);
+        document.querySelectorAll('.dest-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        this.selectedDestId = card.getAttribute('data-dest');
+      });
+    });
+
+    // Nút Bắt đầu
+    document.getElementById('btn-start-game').addEventListener('click', () => {
+      audio.playHonk();
+      this.startTrip();
+    });
+  },
+
+  startTrip() {
+    this.currentCar = CAR_STYLES[this.selectedCarId];
+    this.currentDest = DESTINATIONS[this.selectedDestId];
+
+    this.score = 0;
+    this.signIndex = 0;
+    this.correctSigns = 0;
+    this.chosenRoute = null;
+    this.isJunctionPassed = false;
+    this.carSpeed = 0;
+    this.targetSpeed = 1.45;
+    this.roadDistance = 0;
+
+    // HUD banner
+    document.getElementById('hud-car-badge').textContent = this.currentCar.badge;
+    document.getElementById('hud-dest-name').textContent = '📍 Đích: ' + this.currentDest.name;
+    document.getElementById('hud-score-val').textContent = this.score;
+
+    this.showScreen('screen-drive');
+    this.initCanvas3D();
+    this.scheduleNextSign();
+  },
+
+  scheduleNextSign() {
+    if (this.signIndex < 2) {
+      // 2 biển báo đầu tiên trước ngã rẽ
+      this.approachingSign = this.currentDest.signs[this.signIndex];
+      this.signZ = 980;
+      this.isDriving = true;
+      this.targetSpeed = 1.45;
+      this.updateStatus('🚗 Đang di chuyển trên đường... Biển báo phía trước!');
+    } else if (this.signIndex === 2 && !this.isJunctionPassed) {
+      // Đến ngã rẽ -> Hiện bản đồ chọn đường ngắn nhất!
+      this.isDriving = false;
+      this.carSpeed = 0;
+      this.updateStatus('🛑 Đã đến ngã rẽ! Xem bản đồ và chọn đường ngắn nhất.');
+      setTimeout(() => this.openJunctionMap(), 600);
+    } else if (this.signIndex < 4) {
+      // 2 biển báo tiếp theo sau khi rẽ
+      this.approachingSign = this.currentDest.signs[this.signIndex];
+      this.signZ = 980;
+      this.isDriving = true;
+      this.targetSpeed = 1.45;
+      this.updateStatus('🚗 Đang tiến vào đoạn đường đã chọn...');
+    } else {
+      // Về đích
+      this.isDriving = true;
+      this.approachingSign = 'FINISH';
+      this.signZ = 980;
+      this.updateStatus('🏁 Sắp đến cổng ' + this.currentDest.name + ' rồi!');
+    }
+  },
+
+  updateStatus(txt) {
+    document.getElementById('hud-status').textContent = txt;
+    document.getElementById('drive-toast').textContent = txt;
+  },
+
+  // ================= 3D CANVAS RENDERER =================
+  initCanvas3D() {
+    const canvas = document.getElementById('drive-canvas');
+    const container = canvas.parentElement;
+    const W = container.offsetWidth || 900;
+    const H = container.offsetHeight || 600;
+    canvas.width = W;
+    canvas.height = H;
+
+    if (this.animId) cancelAnimationFrame(this.animId);
+    const loop = () => {
+      this.render3D(canvas);
+      this.updatePhysics();
+      this.animId = requestAnimationFrame(loop);
+    };
+    this.animId = requestAnimationFrame(loop);
+  },
+
+  updatePhysics() {
+    if (this.isDriving) {
+      // Tăng giảm tốc độ mượt mà
+      this.carSpeed += (this.targetSpeed - this.carSpeed) * 0.04;
+      this.roadDistance += this.carSpeed;
+
+      if (this.approachingSign) {
+        // Tốc độ tiếp cận biển báo vừa phải (~3.5 giây lái xe thư thả)
+        this.signZ -= this.carSpeed * 3.4;
+
+        if (this.signZ <= 90) {
+          this.isDriving = false;
+          this.carSpeed = 0;
+
+          if (this.approachingSign === 'FINISH') {
+            audio.playCheer();
+            setTimeout(() => this.showVictory(), 700);
+          } else {
+            audio.beep(350, 'sine', 0.15);
+            setTimeout(() => this.openSignQuestion(this.approachingSign), 400);
+          }
+        }
+      }
+    } else {
+      this.carSpeed += (0 - this.carSpeed) * 0.08;
+    }
+  },
+
+  render3D(canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const horizonY = H * 0.44;
+
+    // 1. Bầu trời xanh biếc
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+    skyGrad.addColorStop(0, '#0284c7');
+    skyGrad.addColorStop(0.65, '#7dd3fc');
+    skyGrad.addColorStop(1, '#e0f2fe');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, horizonY);
+
+    // Mặt trời
+    ctx.save();
+    ctx.fillStyle = '#fde047';
+    ctx.shadowColor = '#facc15';
+    ctx.shadowBlur = 22;
+    ctx.beginPath();
+    ctx.arc(W * 0.8, horizonY * 0.4, 26, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Mây trắng
+    this.drawCloud(ctx, W * 0.16, horizonY * 0.32, 34);
+    this.drawCloud(ctx, W * 0.46, horizonY * 0.22, 28);
+    this.drawCloud(ctx, W * 0.76, horizonY * 0.26, 30);
+
+    // Dãy đồi xa nhấp nhô
+    ctx.fillStyle = '#86efac';
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY);
+    ctx.quadraticCurveTo(W * 0.25, horizonY - 28, W * 0.5, horizonY);
+    ctx.quadraticCurveTo(W * 0.75, horizonY - 36, W, horizonY);
+    ctx.lineTo(W, horizonY);
+    ctx.lineTo(0, horizonY);
+    ctx.fill();
+
+    // 2. Mặt đất cỏ xanh hai bên
+    const grassGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+    grassGrad.addColorStop(0, '#65a30d');
+    grassGrad.addColorStop(1, '#3f6212');
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, horizonY, W, H - horizonY);
+
+    // 3. Đường nhựa phối cảnh 3D
+    const roadTopW = W * 0.09;
+    const roadBotW = W * 0.64;
+    const roadCenterX = W * 0.5;
+
+    // Lề đường sọc trắng đỏ (Curbs)
+    ctx.fillStyle = '#f1f5f9';
+    ctx.beginPath();
+    ctx.moveTo(roadCenterX - roadTopW * 0.62, horizonY);
+    ctx.lineTo(roadCenterX + roadTopW * 0.62, horizonY);
+    ctx.lineTo(roadCenterX + roadBotW * 0.53, H);
+    ctx.lineTo(roadCenterX - roadBotW * 0.53, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Mặt đường xám
+    const roadGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+    roadGrad.addColorStop(0, '#64748b');
+    roadGrad.addColorStop(1, '#1e293b');
+    ctx.fillStyle = roadGrad;
+    ctx.beginPath();
+    ctx.moveTo(roadCenterX - roadTopW * 0.5, horizonY);
+    ctx.lineTo(roadCenterX + roadTopW * 0.5, horizonY);
+    ctx.lineTo(roadCenterX + roadBotW * 0.5, H);
+    ctx.lineTo(roadCenterX - roadBotW * 0.5, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Vạch kẻ đường vàng đứt đoạn
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 5.5;
+    ctx.setLineDash([26, 22]);
+    ctx.lineDashOffset = -this.roadDistance * 16;
+    ctx.beginPath();
+    ctx.moveTo(roadCenterX, horizonY);
+    ctx.lineTo(roadCenterX, H);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 4. Hàng cây hai bên đường cuộn lùi mượt mà
+    this.drawRoadsideTrees(ctx, W, H, horizonY, roadCenterX, roadTopW, roadBotW);
+
+    // 5. Biển báo hoặc Cổng đích đang tiến lại gần
+    if (this.approachingSign) {
+      if (this.approachingSign === 'FINISH') {
+        this.drawFinishGate(ctx, roadCenterX, horizonY, H, this.signZ);
+      } else {
+        this.drawApproachingSign3D(ctx, roadCenterX, horizonY, H, roadTopW, roadBotW, this.signZ, this.approachingSign);
+      }
+    }
+
+    // 6. Xe người chơi đã chọn nhìn từ phía sau (Rear view)
+    this.drawChosenCar(ctx, roadCenterX, H - 28);
+  },
+
+  drawCloud(ctx, x, y, r) {
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.arc(x + r * 0.6, y - r * 0.2, r * 0.7, 0, Math.PI * 2);
+    ctx.arc(x - r * 0.6, y, r * 0.6, 0, Math.PI * 2);
+    ctx.arc(x + r * 1.1, y + r * 0.1, r * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  drawRoadsideTrees(ctx, W, H, horizonY, rcX, topW, botW) {
+    const count = 5;
+    for (let i = 0; i < count; i++) {
+      const zNorm = ((i * 0.2 + (this.roadDistance * 0.035) % 0.2) % 1);
+      if (zNorm < 0.06 || zNorm > 0.95) continue;
+
+      const scale = Math.pow(zNorm, 2.2);
+      const y = horizonY + (H - horizonY) * zNorm;
+      const currentRoadW = topW + (botW - topW) * zNorm;
+
+      const treeSize = 14 + scale * 75;
+      const leftX = rcX - currentRoadW * 0.58 - treeSize * 0.5;
+      const rightX = rcX + currentRoadW * 0.58 + treeSize * 0.5;
+
+      this.drawCartoonTree(ctx, leftX, y, treeSize);
+      this.drawCartoonTree(ctx, rightX, y, treeSize);
+    }
+  },
+
+  drawCartoonTree(ctx, x, y, s) {
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(x - s * 0.1, y - s * 0.4, s * 0.2, s * 0.4);
+    ctx.fillStyle = '#15803d';
+    ctx.beginPath();
+    ctx.arc(x, y - s * 0.6, s * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.arc(x - s * 0.1, y - s * 0.7, s * 0.25, 0, Math.PI * 2);
+    ctx.arc(x + s * 0.12, y - s * 0.55, s * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+  },
+
+  drawApproachingSign3D(ctx, rcX, horY, H, topW, botW, z, signId) {
+    const progress = Math.max(0, Math.min(1, 1 - (z - 90) / 890));
+    const persp = Math.pow(progress, 1.8);
+
+    const y = horY + (H - horY) * persp;
+    const currentRoadW = topW + (botW - topW) * persp;
+    const x = rcX + currentRoadW * 0.54 + 18 * persp;
+    const size = 20 + persp * 125;
+
+    ctx.save();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(x - size * 0.05, y - size * 0.5, size * 0.1, size * 0.5);
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(x - size * 0.15, y - size * 0.06, size * 0.3, size * 0.06);
+
+    ctx.translate(x, y - size * 0.85);
+
+    if (signId === 'traffic_light') {
+      ctx.fillStyle = '#1e293b';
+      this.roundRect(ctx, -size * 0.25, -size * 0.45, size * 0.5, size * 0.85, size * 0.08);
+      ctx.fill();
+      const r = size * 0.09;
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath(); ctx.arc(0, -size * 0.25, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(0, -size * 0.03, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath(); ctx.arc(0, size * 0.19, r, 0, Math.PI * 2); ctx.fill();
+    } else if (signId === 'pedestrian') {
+      ctx.fillStyle = '#1d4ed8';
+      this.roundRect(ctx, -size * 0.35, -size * 0.35, size * 0.7, size * 0.7, size * 0.08);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(0, -size * 0.16, size * 0.08, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(-size * 0.04, -size * 0.06, size * 0.08, size * 0.2);
+    } else if (signId === 'no_entry') {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath(); ctx.arc(0, 0, size * 0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      this.roundRect(ctx, -size * 0.26, -size * 0.07, size * 0.52, size * 0.14, size * 0.04);
+      ctx.fill();
+    } else if (signId === 'construction' || signId === 'children') {
+      ctx.fillStyle = '#f59e0b';
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = Math.max(2, size * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.42);
+      ctx.lineTo(size * 0.4, size * 0.3);
+      ctx.lineTo(-size * 0.4, size * 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#1e293b';
+      if (signId === 'construction') {
+        ctx.beginPath(); ctx.arc(0, -size * 0.08, size * 0.07, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(-size * 0.04, 0, size * 0.08, size * 0.18);
+      } else {
+        ctx.beginPath(); ctx.arc(-size * 0.1, -size * 0.06, size * 0.06, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(size * 0.1, -size * 0.03, size * 0.05, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(-size * 0.14, 0, size * 0.08, size * 0.17);
+        ctx.fillRect(size * 0.06, 0.03, size * 0.08, size * 0.15);
+      }
+    }
+    ctx.restore();
+  },
+
+  drawFinishGate(ctx, rcX, horY, H, z) {
+    const progress = Math.max(0, Math.min(1, 1 - (z - 90) / 890));
+    const persp = Math.pow(progress, 1.8);
+    const y = horY + (H - horY) * persp;
+    const gateW = 60 + persp * 240;
+    const gateH = 40 + persp * 150;
+
+    ctx.save();
+    ctx.translate(rcX, y);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(-gateW * 0.5, -gateH, gateW * 0.12, gateH);
+    ctx.fillRect(gateW * 0.38, -gateH, gateW * 0.12, gateH);
+
+    ctx.fillStyle = '#f59e0b';
+    this.roundRect(ctx, -gateW * 0.54, -gateH - gateH * 0.3, gateW * 1.08, gateH * 0.32, 10);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold ' + Math.max(10, Math.floor(12 + persp * 14)) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏛️ ' + this.currentDest.buildingName, 0, -gateH - gateH * 0.1);
+    ctx.restore();
+  },
+
+  // VẼ XE NGƯỜI CHƠI CHỌN NHÌN TỪ PHÍA SAU
+  drawChosenCar(ctx, cx, cy) {
+    ctx.save();
+    const carId = this.selectedCarId;
+    const carW = carId === 'school_bus' ? 146 : 140;
+    const carH = carId === 'school_bus' ? 104 : 92;
+    const bounceY = this.isDriving ? Math.sin(this.roadDistance * 1.6) * 2.2 : 0;
+    const x = cx;
+    const y = cy + bounceY;
+
+    // Bóng xe
+    ctx.fillStyle = 'rgba(0,0,0,0.32)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 2, carW * 0.55, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2 Bánh xe
+    ctx.fillStyle = '#0f172a';
+    this.roundRect(ctx, x - carW * 0.52, y - 26, 22, 34, 6); ctx.fill();
+    this.roundRect(ctx, x + carW * 0.52 - 22, y - 26, 22, 34, 6); ctx.fill();
+
+    // Màu xe chủ đạo
+    let mainColor = '#ef4444';
+    let darkColor = '#b91c1c';
+
+    if (carId === 'yellow_taxi') {
+      mainColor = '#eab308'; darkColor = '#ca8a04';
+    } else if (carId === 'police_car') {
+      mainColor = '#2563eb'; darkColor = '#1e3a8a';
+    } else if (carId === 'school_bus') {
+      mainColor = '#f97316'; darkColor = '#c2410c';
+    }
+
+    // Thân dưới xe
+    const bodyGrad = ctx.createLinearGradient(0, y - carH, 0, y);
+    bodyGrad.addColorStop(0, mainColor);
+    bodyGrad.addColorStop(1, darkColor);
+    ctx.fillStyle = bodyGrad;
+    this.roundRect(ctx, x - carW * 0.45, y - 48, carW * 0.9, 44, 14); ctx.fill();
+
+    // Biển số xe & Cản sau
+    ctx.fillStyle = '#334155';
+    this.roundRect(ctx, x - carW * 0.42, y - 18, carW * 0.84, 12, 6); ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    this.roundRect(ctx, x - 26, y - 16, 52, 14, 4); ctx.fill();
+    ctx.fillStyle = '#1e3a8a';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('AN-2026', x, y - 6);
+
+    // Đèn hậu
+    ctx.fillStyle = '#ff3333';
+    this.roundRect(ctx, x - carW * 0.42, y - 42, 22, 14, 5); ctx.fill();
+    this.roundRect(ctx, x + carW * 0.42 - 22, y - 42, 22, 14, 5); ctx.fill();
+
+    // Mui xe / Cabin
+    ctx.fillStyle = mainColor;
+    this.roundRect(ctx, x - carW * 0.35, y - carH, carW * 0.7, 44, 16); ctx.fill();
+
+    // Kính sau
+    const glassGrad = ctx.createLinearGradient(0, y - carH + 6, 0, y - 46);
+    glassGrad.addColorStop(0, '#bae6fd');
+    glassGrad.addColorStop(1, '#38bdf8');
+    ctx.fillStyle = glassGrad;
+    this.roundRect(ctx, x - carW * 0.3, y - carH + 8, carW * 0.6, 32, 10); ctx.fill();
+
+    // Phụ kiện riêng cho từng loại xe
+    if (carId === 'yellow_taxi') {
+      // Hộp đèn TAXI trên nóc
+      ctx.fillStyle = '#ffffff';
+      this.roundRect(ctx, x - 20, y - carH - 12, 40, 14, 4); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillText('TAXI', x, y - carH - 2);
+    } else if (carId === 'police_car') {
+      // Đèn chớp còi cảnh sát xanh đỏ
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath(); ctx.arc(x - 12, y - carH - 6, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#3b82f6';
+      ctx.beginPath(); ctx.arc(x + 12, y - carH - 6, 7, 0, Math.PI * 2); ctx.fill();
+    } else if (carId === 'school_bus') {
+      // Biển SCHOOL BUS
+      ctx.fillStyle = '#ffffff';
+      this.roundRect(ctx, x - 28, y - carH - 10, 56, 12, 3); ctx.fill();
+      ctx.fillStyle = '#ea580c';
+      ctx.font = 'bold 8px sans-serif';
+      ctx.fillText('SCHOOL BUS', x, y - carH - 1);
+    }
+
+    // Người ngồi trong xe vẫy tay
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('👨‍👩‍👧', x, y - carH + 32);
+
+    // Khói xả khi xe chạy
+    if (this.isDriving) {
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      const puffX = x - carW * 0.38;
+      const puffY = y - 4;
+      ctx.beginPath();
+      ctx.arc(puffX - 8, puffY, 4, 0, Math.PI * 2);
+      ctx.arc(puffX - 16, puffY - 4, 6, 0, Math.PI * 2);
+      ctx.arc(puffX - 25, puffY - 8, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  },
+
+  roundRect(ctx, x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  },
+
+  // ================= 4. CÂU HỎI BIỂN BÁO =================
+  openSignQuestion(signId) {
+    const sign = SIGNS_DATA[signId];
+    this.currentQPhase = 'SHAPE';
+
+    document.getElementById('q-badge').textContent = `BIỂN BÁO ${this.signIndex + 1}/4`;
+    document.getElementById('q-sign-img').innerHTML = sign.svg;
+    document.getElementById('q-sign-title').textContent = sign.name;
+    document.getElementById('q-sign-hint').textContent = sign.hint;
+
+    this.renderQuestionPhase(sign);
+    document.getElementById('overlay-question').classList.remove('hidden');
+  },
+
+  renderQuestionPhase(sign) {
+    const qData = this.currentQPhase === 'SHAPE' ? sign.qShape : sign.qMeaning;
+    document.getElementById('q-question-text').textContent =
+      (this.currentQPhase === 'SHAPE' ? '① Hình dáng: ' : '② Công dụng / Ý nghĩa: ') + qData.q;
+
+    const optsEl = document.getElementById('q-options');
+    optsEl.innerHTML = '';
+
+    const fb = document.getElementById('q-explain');
+    fb.className = 'q-explain';
+    fb.textContent = '';
+
+    const nextBtn = document.getElementById('btn-q-continue');
+    nextBtn.className = 'btn-continue';
+
+    qData.opts.forEach((optText, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'q-opt-btn';
+      btn.textContent = optText;
+      btn.addEventListener('click', () => this.handleSignAnswer(i, qData, sign));
+      optsEl.appendChild(btn);
+    });
+  },
+
+  handleSignAnswer(chosenIdx, qData, sign) {
+    const optsEl = document.getElementById('q-options');
+    const fb = document.getElementById('q-explain');
+    const nextBtn = document.getElementById('btn-q-continue');
+
+    optsEl.querySelectorAll('.q-opt-btn').forEach(b => b.disabled = true);
+    const isCorrect = chosenIdx === qData.ans;
+
+    optsEl.querySelectorAll('.q-opt-btn').forEach((b, idx) => {
+      if (idx === qData.ans) b.classList.add('correct');
+      else if (idx === chosenIdx && !isCorrect) b.classList.add('wrong');
+    });
+
+    if (isCorrect) {
+      audio.playCorrect();
+      this.score += 10;
+      fb.className = 'q-explain ok';
+      fb.textContent = '🎉 Giỏi quá! ' + qData.explain;
+    } else {
+      audio.beep(220, 'square', 0.2, 0.08);
+      this.score += 3;
+      fb.className = 'q-explain ko';
+      fb.textContent = '💡 Gần đúng rồi! ' + qData.explain;
+    }
+    document.getElementById('hud-score-val').textContent = this.score;
+    nextBtn.classList.add('show');
+
+    if (this.currentQPhase === 'SHAPE') {
+      nextBtn.textContent = 'Tiếp theo: Tìm hiểu công dụng biển báo ➔';
+      nextBtn.onclick = () => {
+        this.currentQPhase = 'MEANING';
+        this.renderQuestionPhase(sign);
+      };
+    } else {
+      this.correctSigns++;
+      nextBtn.textContent = 'Nổ máy chạy tiếp thôi 🚗💨';
+      nextBtn.onclick = () => {
+        audio.playHonk();
+        document.getElementById('overlay-question').classList.add('hidden');
+        this.signIndex++;
+        this.scheduleNextSign();
+      };
+    }
+  },
+
+  // ================= 5. BẢN ĐỒ NGÃ RẼ: CHỌN ĐƯỜNG NGẮN NHẤT =================
+  openJunctionMap() {
+    const dest = this.currentDest;
+    const canvas = document.getElementById('junction-canvas');
+    this.drawJunctionMapCanvas(canvas, dest);
+
+    const choicesEl = document.getElementById('map-choices');
+    choicesEl.innerHTML = '';
+    const fb = document.getElementById('map-feedback');
+    fb.className = 'map-feedback';
+    fb.textContent = 'Bé hãy cộng các đoạn đường (m) để tìm con đường ngắn nhất!';
+
+    const contBtn = document.getElementById('btn-map-continue');
+    contBtn.classList.remove('show');
+
+    dest.routes.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      const segText = r.segs.length > 1 ? r.segs.join(' m + ') + ' m' : `${r.total} m thẳng`;
+      btn.innerHTML = `
+        <span class="c-title" style="color:${r.color}">● ${r.name}</span>
+        <span class="c-math">${segText}</span>
+        <span class="c-dist">Tổng: <b>${r.total} m</b></span>
+      `;
+      btn.addEventListener('click', () => this.handleRouteChoice(r, btn));
+      choicesEl.appendChild(btn);
+    });
+
+    document.getElementById('overlay-map').classList.remove('hidden');
+  },
+
+  drawJunctionMapCanvas(canvas, dest) {
+    const W = canvas.offsetWidth || 700;
+    const H = 250;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const grassGrad = ctx.createLinearGradient(0, 0, 0, H);
+    grassGrad.addColorStop(0, '#bbf7d0');
+    grassGrad.addColorStop(1, '#86efac');
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    const startX = W * 0.12;
+    const startY = H * 0.5;
+    const endX = W * 0.86;
+    const endY = H * 0.46;
+
+    // Sông
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.36, H * 0.76, W * 0.11, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const cpTop = { x: W * 0.48, y: H * 0.16 };
+    const cpMid = { x: W * 0.48, y: H * 0.50 };
+    const cpBot = { x: W * 0.48, y: H * 0.84 };
+
+    const curves = [
+      { cp: cpTop, r: dest.routes[0] },
+      { cp: cpMid, r: dest.routes[1] },
+      { cp: cpBot, r: dest.routes[2] }
+    ];
+
+    curves.forEach(({ cp, r }) => {
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(cp.x, cp.y, endX, endY);
+      ctx.lineWidth = 26;
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.stroke();
+
+      ctx.lineWidth = 20;
+      ctx.strokeStyle = '#94a3b8';
+      ctx.stroke();
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.setLineDash([8, 8]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      this.drawMapSegLabels(ctx, startX, startY, cp.x, cp.y, endX, endY, r.segs, r.color);
+    });
+
+    // Cầu
+    ctx.fillStyle = '#d97706';
+    ctx.fillRect(W * 0.32, H * 0.70, 34, 14);
+
+    // Tiệm kem / Cửa hàng
+    ctx.fillStyle = '#ffffff';
+    this.roundRect(ctx, W * 0.48 - 45, H * 0.32, 90, 24, 8);
+    ctx.fill();
+    ctx.fillStyle = '#1e3a8a';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(dest.shopName, W * 0.48, H * 0.32 + 16);
+
+    // Nhà An (bên trái)
+    ctx.fillStyle = '#ffffff';
+    this.roundRect(ctx, startX - 52, startY - 26, 78, 52, 12);
+    ctx.fill();
+    ctx.fillStyle = '#15803d';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Nhà An 🏠', startX - 13, startY - 8);
+    ctx.font = '22px sans-serif';
+    ctx.fillText(this.currentCar.icon, startX - 13, startY + 16);
+
+    // Điểm đến (bên phải)
+    ctx.fillStyle = '#ffffff';
+    this.roundRect(ctx, endX - 15, endY - 32, 95, 64, 12);
+    ctx.fill();
+    ctx.fillStyle = '#dc2626';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(dest.name, endX + 32, endY - 12);
+    ctx.font = '24px sans-serif';
+    ctx.fillText(dest.icon, endX + 32, endY + 18);
+  },
+
+  drawMapSegLabels(ctx, sx, sy, cpx, cpy, ex, ey, segs, color) {
+    const pts = segs.length === 1 ? [0.5] : [0.28, 0.72];
+    pts.forEach((t, i) => {
+      const x = (1 - t) * (1 - t) * sx + 2 * (1 - t) * t * cpx + t * t * ex;
+      const y = (1 - t) * (1 - t) * sy + 2 * (1 - t) * t * cpy + t * t * ey;
+      const txt = `${segs[i]} m`;
+
+      ctx.save();
+      ctx.font = 'bold 12px sans-serif';
+      const tw = ctx.measureText(txt).width;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowBlur = 6;
+      this.roundRect(ctx, x - tw / 2 - 8, y - 12, tw + 16, 22, 11);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(txt, x, y + 4);
+      ctx.restore();
+    });
+  },
+
+  handleRouteChoice(route, btnEl) {
+    const dest = this.currentDest;
+    const isShortest = route.id === dest.shortestId;
+    const fb = document.getElementById('map-feedback');
+    const contBtn = document.getElementById('btn-map-continue');
+
+    document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('correct', 'wrong'));
+
+    if (isShortest) {
+      audio.playCorrect();
+      btnEl.classList.add('correct');
+      this.score += 20;
+      this.chosenRoute = route;
+      fb.className = 'map-feedback ok';
+      fb.textContent = `🎉 CHÍNH XÁC! Tuyến ${route.name} dài ${route.total}m là con đường ngắn nhất!`;
+      contBtn.classList.add('show');
+    } else {
+      audio.beep(240, 'square', 0.15, 0.08);
+      btnEl.classList.add('wrong');
+      fb.className = 'map-feedback ko';
+      fb.textContent = `💡 Tuyến này dài ${route.total}m. Hãy thử kiểm tra các tuyến khác xem tuyến nào có số mét nhỏ hơn nhé!`;
+      this.chosenRoute = route;
+      contBtn.classList.add('show');
+    }
+    document.getElementById('hud-score-val').textContent = this.score;
+
+    contBtn.onclick = () => {
+      audio.playHonk();
+      this.isJunctionPassed = true;
+      document.getElementById('overlay-map').classList.add('hidden');
+      this.scheduleNextSign();
+    };
+  },
+
+  // ================= 6. MÀN HÌNH ĐẾN ĐÍCH SIÊU ĐẸP =================
+  showVictory() {
+    this.showScreen('screen-result');
+
+    const dest = this.currentDest;
+    const isShortest = this.chosenRoute && this.chosenRoute.id === dest.shortestId;
+
+    document.getElementById('res-dest-text').innerHTML =
+      `Gia đình bạn An trên chiếc <b>${this.currentCar.name}</b> đã đến <b>${dest.name}</b> an toàn và đúng giờ! ${dest.icon}`;
+    document.getElementById('res-score').textContent = this.score + ' đ';
+    document.getElementById('res-correct').textContent = `${this.correctSigns}/4`;
+    document.getElementById('res-dist').textContent = (this.chosenRoute ? this.chosenRoute.total : 32) + ' m';
+
+    if (isShortest) {
+      this.score += 30;
+      document.getElementById('res-score').textContent = this.score + ' đ';
+    }
+
+    document.getElementById('res-diploma').innerHTML =
+      `🎖️ <b>BẰNG KHEN BÁC TÀI NHÍ XUẤT SẮC:</b><br>` +
+      `• Điểm đến: <b>${dest.name}</b><br>` +
+      `• Chiếc xe đồng hành: <b>${this.currentCar.name} ${this.currentCar.icon}</b><br>` +
+      `• Tuyến đường đã chọn: <b>${this.chosenRoute ? this.chosenRoute.name : 'Đường đi'} (${this.chosenRoute ? this.chosenRoute.total : 0}m)</b> ` +
+      (isShortest ? '<span style="color:#16a34a">➔ Đạt chuẩn ngắn nhất! (Thưởng +30đ)</span>' : '<span style="color:#d97706">➔ Chưa phải đường ngắn nhất, lần sau tính cẩn thận hơn nhé!</span>') +
+      `<br>• Nhận biết thành công <b>4 biển báo giao thông</b> trên chuyến đi!`;
+
+    this.startConfetti();
+  },
+
+  startConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const container = canvas.parentElement;
+    canvas.width = container.offsetWidth || 900;
+    canvas.height = container.offsetHeight || 600;
+    const ctx = canvas.getContext('2d');
+
+    this.confettiParticles = [];
+    const colors = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899'];
+    for (let i = 0; i < 90; i++) {
+      this.confettiParticles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height,
+        w: 8 + Math.random() * 8,
+        h: 6 + Math.random() * 6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 2,
+        vy: 2 + Math.random() * 3.5,
+        rot: Math.random() * Math.PI * 2,
+        vrot: (Math.random() - 0.5) * 0.1
+      });
+    }
+
+    if (this.confettiAnimId) cancelAnimationFrame(this.confettiAnimId);
+    const loop = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this.confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vrot;
+        if (p.y > canvas.height) {
+          p.y = -10;
+          p.x = Math.random() * canvas.width;
+        }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      this.confettiAnimId = requestAnimationFrame(loop);
+    };
+    this.confettiAnimId = requestAnimationFrame(loop);
+  },
+
+  goStart() {
+    if (this.animId) cancelAnimationFrame(this.animId);
+    if (this.confettiAnimId) cancelAnimationFrame(this.confettiAnimId);
+    this.showScreen('screen-start');
+  },
+
+  showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(screenId).classList.remove('hidden');
+  }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  game.init();
+});
+</script>
+</body>
+</html>
