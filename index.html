@@ -565,26 +565,33 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: #F8FAFC;
-  border: 3px dashed #93C5FD;
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+  border: 2px solid #DBEAFE;
   border-radius: var(--radius-md);
   padding: 12px 18px;
   margin: 6px 0 14px;
 }
 .sign-svg-wrap {
-  width: 94px;
-  height: 94px;
+  width: 112px;
+  height: 112px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  padding: 7px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 .sign-svg-wrap svg, .sign-svg-wrap img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 13px;
 }
+.sign-svg-wrap img { display: block; }
 .sign-details { text-align: left; }
 .sign-details h3 {
   font-size: 1.2rem;
@@ -1444,6 +1451,7 @@ const SIGNS_DATA = {
     name: 'Đèn Tín Hiệu Giao Thông',
     hint: 'Nhìn vào chiếc hộp đèn đứng dài và 3 vòng tròn màu: Đỏ - Vàng - Xanh.',
     svg: SVG_ICONS.traffic_light,
+    imageSrc: 'images/den_tin_hieu_giao_thong.jpg',
     qShape: {
       q: 'Đèn tín hiệu giao thông có dạng hình học gì?',
       opts: [
@@ -1503,6 +1511,7 @@ const SIGNS_DATA = {
     name: 'Cấm Đi Ngược Chiều',
     hint: 'Biển báo tròn màu đỏ rực, ở giữa có một vạch trắng to nằm ngang.',
     svg: SVG_ICONS.no_entry,
+    imageSrc: 'images/bien_cam_nguoc_chieu.jpg',
     qShape: {
       q: 'Biển "Cấm đi ngược chiều" có dạng hình gì?',
       opts: [
@@ -1587,6 +1596,15 @@ const SIGNS_DATA = {
     }
   }
 };
+
+// Ảnh biển báo được dùng thống nhất trong hộp câu hỏi và cảnh lái xe.
+const SIGN_PHOTOS = Object.fromEntries(
+  Object.entries(SIGNS_DATA).map(([id, sign]) => {
+    const image = new Image();
+    image.src = sign.imageSrc;
+    return [id, image];
+  })
+);
 
 /* ================================================================
    4. DỮ LIỆU ĐIỂM ĐẾN & XE ĐIỀU KHIỂN
@@ -2093,7 +2111,21 @@ const game = {
 
     ctx.translate(x, y - size * 0.85);
 
-    // Vẽ biển báo trực tiếp
+    // Hiển thị ảnh thật trên biển báo trong cảnh lái xe.
+    const signPhoto = SIGN_PHOTOS[signId];
+    if (signPhoto && signPhoto.complete && signPhoto.naturalWidth > 0) {
+      const imageSize = size * 0.82;
+      const imageRatio = signPhoto.naturalWidth / signPhoto.naturalHeight;
+      const drawWidth = imageRatio >= 1 ? imageSize : imageSize * imageRatio;
+      const drawHeight = imageRatio >= 1 ? imageSize / imageRatio : imageSize;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(-imageSize * 0.44, -imageSize * 0.44, imageSize * 0.88, imageSize * 0.88);
+      ctx.drawImage(signPhoto, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      ctx.restore();
+      return;
+    }
+
+    // Hình vẽ dự phòng trong lúc ảnh đang tải.
     if (signId === 'traffic_light') {
       ctx.fillStyle = '#1E293B';
       this.roundRect(ctx, -size * 0.25, -size * 0.45, size * 0.5, size * 0.85, size * 0.08);
@@ -2296,7 +2328,13 @@ const game = {
     this.currentQPhase = 'SHAPE';
 
     document.getElementById('q-badge').textContent = `BIỂN BÁO SỐ ${this.signIndex + 1}/4`;
-    document.getElementById('q-sign-img').innerHTML = sign.svg;
+    const signImage = document.getElementById('q-sign-img');
+    signImage.replaceChildren();
+    const image = document.createElement('img');
+    image.src = sign.imageSrc;
+    image.alt = sign.name;
+    image.loading = 'eager';
+    signImage.appendChild(image);
     document.getElementById('q-sign-title').textContent = sign.name;
     document.getElementById('q-sign-hint').textContent = sign.hint;
 
